@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
@@ -27,11 +26,6 @@ public class UnityAttributesDemo : MonoBehaviour
     public float PrivateFloatProperty => _privateFloatValue;
     public string PrivateStringProperty => _privateString;
 
-    private void Start()
-    {
-        ConditionalExample();
-    }
-
     private void Update()
     {
         ExecuteAlwaysExample();
@@ -56,12 +50,6 @@ public class UnityAttributesDemo : MonoBehaviour
     private void ContextMenuExample()
     {
         Debug.Log("Context Menu Example!");
-    }
-
-    [Conditional("DEBUG")]
-    private void ConditionalExample()
-    {
-        Debug.Log("Conditional Example!");
     }
 }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Profiling;
@@ -6,14 +7,15 @@ public class ProfilerLoadDemo : MonoBehaviour
 {
     [SerializeField] private bool _simulateCpuLoad = false;
     [SerializeField] private bool _simulateGcAlloc = false;
-    [SerializeField] private bool _simulateObjectSpam = false;
 
     [SerializeField] private int _cpuIterations = 200000;
     [SerializeField] private int _allocationsPerFrame = 100;
-    [SerializeField] private int _objectsPerBurst = 20;
 
+    [SerializeField][Range(100, 1000)] private int _spawnCount = 300;
     [SerializeField] private GameObject _cubePrefab;
+    [SerializeField] private Vector3 _spawnArea = new Vector3(10f, 5f, 10f);
 
+    private readonly List<GameObject> _spawnedObjects = new();
     private float _value;
 
     private void Update()
@@ -28,11 +30,6 @@ public class ProfilerLoadDemo : MonoBehaviour
         if (_simulateGcAlloc)
         {
             SimulateGcAlloc();
-        }
-
-        if (_simulateObjectSpam)
-        {
-            SimulateObjectSpam();
         }
     }
 
@@ -57,8 +54,12 @@ public class ProfilerLoadDemo : MonoBehaviour
 
         if (Keyboard.current.cKey.wasPressedThisFrame)
         {
-            _simulateObjectSpam = !_simulateObjectSpam;
-            Debug.Log($"Object Spam: {_simulateObjectSpam}");
+            SpawnObjectsOnce();
+        }
+
+        if (Keyboard.current.vKey.wasPressedThisFrame)
+        {
+            ClearSpawnedObjects();
         }
     }
 
@@ -88,21 +89,55 @@ public class ProfilerLoadDemo : MonoBehaviour
         Profiler.EndSample();
     }
 
-    private void SimulateObjectSpam()
+    private void SpawnObjectsOnce()
     {
         if (_cubePrefab == null)
         {
+            Debug.LogWarning("Cube Prefab is not assigned.");
             return;
         }
 
-        Profiler.BeginSample("Demo/Object Spam");
-
-        for (int i = 0; i < _objectsPerBurst; i++)
+        if (_spawnedObjects.Count > 0)
         {
-            GameObject clone = Instantiate(_cubePrefab, Random.insideUnitSphere * 3f, Quaternion.identity);
-            Destroy(clone, 0.1f);
+            Debug.Log("Objects already spawned. Press V to clear them first.");
+            return;
+        }
+
+        Profiler.BeginSample("Demo/Mass Spawn Objects");
+
+        for (int i = 0; i < _spawnCount; i++)
+        {
+            Vector3 position = new Vector3(
+                Random.Range(-_spawnArea.x, _spawnArea.x),
+                Random.Range(1f, _spawnArea.y),
+                Random.Range(-_spawnArea.z, _spawnArea.z)
+            );
+
+            GameObject clone = Instantiate(_cubePrefab, position, Random.rotation);
+            _spawnedObjects.Add(clone);
         }
 
         Profiler.EndSample();
+
+        Debug.Log($"Spawned {_spawnCount} objects.");
+    }
+
+    private void ClearSpawnedObjects()
+    {
+        Profiler.BeginSample("Demo/Clear Spawned Objects");
+
+        for (int i = 0; i < _spawnedObjects.Count; i++)
+        {
+            if (_spawnedObjects[i] != null)
+            {
+                Destroy(_spawnedObjects[i]);
+            }
+        }
+
+        _spawnedObjects.Clear();
+
+        Profiler.EndSample();
+
+        Debug.Log("All spawned objects cleared.");
     }
 }

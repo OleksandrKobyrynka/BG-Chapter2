@@ -1,0 +1,9 @@
+{
+  "playerName": "John",
+  "inventory": {
+    "Apple": 5,
+    "Sword": 1,
+    "Health Potion": 2
+  },
+  "coins": 5
+}
